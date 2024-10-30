@@ -1,79 +1,72 @@
-import com.fasilkom.librarian.Akun;
-import com.fasilkom.screen.Display;
-import com.fasilkom.screen.DisplayAdmin;
-import com.fasilkom.screen.DisplayStudent;
-import com.fasilkom.student.Student;
-import com.fasilkom.student.StudentBuilder;
 
-import java.util.Scanner;
+import com.fasilkom.mediator.ChatRoomImpl;
+import com.fasilkom.mediator.LoanMediator;
+import com.fasilkom.model.Admin;
+import com.fasilkom.model.Book;
+import com.fasilkom.model.Mahasiswa;
+import com.fasilkom.model.User;
+import com.fasilkom.repository.BookRepository;
+
+import java.util.List;
 
 public class Main {
+
     public static void main(String[] args) {
-        mainDisplay();
+        Admin admin = new Admin.AdminBuilder().setId(666).setName("Samuel").setEmail("Samuel@gmail.com").setPassword("Samuel123").build();
+
+        // Builder Pattern
+        Mahasiswa mahasiswa1 = new Mahasiswa.MahasiswaBuilder()
+                .setId(101)
+                .setName("Mahasiswa A")
+                .setEmail("mahasiswaA@example.com")
+                .setPassword("passwordA")
+                .setProdi("Teknik Informatika")
+                .build();
+        Mahasiswa mahasiswa2 = new Mahasiswa.MahasiswaBuilder()
+                .setId(102)
+                .setName("Mahasiswa B")
+                .setEmail("mahasiswaB@example.com")
+                .setPassword("passwordB")
+                .setProdi("Teknik Informatika")
+                .build();
+
+        // Observe Pattern
+        admin.registerObserver(mahasiswa1);
+        admin.registerObserver(mahasiswa2);
+        Book book = new Book.BookBuilder().setTitle("The Power of Habit").setBookId(1).setIsAvailable(true).setGenre("Self Improvement").setPublicationYear(2020).setAuthor("Charles Duhigg").build();
+        admin.addBook(book);
+        admin.removeObserver(mahasiswa2);
+        admin.addBook(book);
+
+        displayAllBook();
+
+        LoanMediator mediator = new ChatRoomImpl();
+
+
+        User mahasiswa3 = new Mahasiswa.MahasiswaBuilder().setMediator(mediator).setId(1).setEmail("222410102000@gmail.com").setName("Witan Sulaiman").setPassword("Witan123").setProdi("Teknologi Biologi").build();
+        User mahasiswa4 = new Mahasiswa.MahasiswaBuilder().setMediator(mediator).setId(2).setEmail("222410102002@gmail.com").setName("Gibran Efishery").setPassword("Gibran123").setProdi("MIPA").build();
+
+        mediator.addUser(admin);
+        mediator.addUser(mahasiswa3);
+        mediator.addUser(mahasiswa4);
+
+        admin.send("Selamat datang di sistem Perpustakaan Universitas!");
+        mahasiswa4.send("Saya ingin pinjam buku Dunia Shopie, Apakah masih ada?");
+        mahasiswa3.send("Saya juga mau pinjam buku");
+        displayAllBook();
     }
 
-    public static void mainDisplay() {
-        Scanner scanner = new Scanner(System.in);
-        String role = "";
+    private static void displayAllBook() {
+        BookRepository bookRepository = new BookRepository();
+        List<Book> books = bookRepository.getAllBooks();
 
-        while (!role.equals("0")) {  // Tambahkan loop agar program tidak berhenti setelah memilih role
-            System.out.println();
-            System.out.println("====== Pilih Rolemu ======");
-            System.out.println("1. Admin Perpustakaan");
-            System.out.println("2. Mahasiswa");
-            System.out.println("Ketik '0' untuk keluar.");
-            System.out.print("Masukkan rolemu: ");
-            role = scanner.nextLine();
-            displayDetailRole(role);
-        }
-    }
-
-    public static void displayDetailRole(String number) {
-        if (number.equals("1")) {
-            displayDetailAdmin();
-        } else if (number.equals("2")) {
-            displayDetailStudent();
-        } else if (!number.equals("exit")) {
-            System.out.println("Pilihan tidak valid. Silakan coba lagi.");
-        }
-    }
-
-    public static void displayDetailStudent() {
-        System.out.println();
-        System.out.println("====== Data diri ======");
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Masukkan Nama: ");
-        String name = scanner.nextLine();
-        System.out.print("Masukkan NIM: ");
-        String nim = scanner.nextLine();
-        Long nimToLong = Long.parseLong(nim);
-        System.out.print("Masukkan Nama Fakultas: ");
-        String faculty = scanner.nextLine();
-        // Pembuatan objek Student, misalnya
-        Student dataStudent = new StudentBuilder().setName(name).setNim(nimToLong).setFaculty(faculty).build();
-        DisplayStudent tampilan = new DisplayStudent();
-        tampilan.display(dataStudent);
-    }
-
-    public static void displayDetailAdmin() {
-        System.out.println();
-        System.out.println("====== Login for Admin ======");
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Masukkan email: ");
-        String email = scanner.nextLine();
-        System.out.print("Masukkan password: ");
-        String password = scanner.nextLine();
-        // Akun admin login check, misalnya
-        Akun admin = new Akun();
-        if (admin.login(email, password)){
-            DisplayAdmin adminIsTrue = new DisplayAdmin();
-            adminIsTrue.display();
+        System.out.println("Daftar Buku:");
+        if (books.isEmpty()) {
+            System.out.println("Tidak ada buku yang tersedia.");
         } else {
-            System.out.println();
-            System.out.println("Email atau Password salah!");
-            System.out.println();
-            String kosong = scanner.nextLine();
+            for (Book book : books) {
+                System.out.println("- ID: " + book.getBookId() + ", Judul: " + book.getTitle());
+            }
         }
-
     }
 }
